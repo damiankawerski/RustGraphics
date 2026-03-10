@@ -6,8 +6,11 @@ use rust_picture_processor::utils::image_manipulation::{
 
 pub struct App {
     original_image: Option<image::RgbImage>,
+
     processed_image: Option<image::RgbImage>,
+
     texture: Option<egui::TextureHandle>,
+
     brightness: i16,
     contrast: i16,
     gamma: i16,
@@ -19,6 +22,7 @@ impl Default for App {
             original_image: None,
             processed_image: None,
             texture: None,
+
             brightness: 1,
             contrast: 1,
             gamma: 1,
@@ -52,16 +56,20 @@ impl App {
         self.gamma = 1;
     }
 
-    fn apply_processing(
-        &mut self,
-        ctx: &egui::Context,
-        fun: fn(&image::RgbImage, i16) -> image::RgbImage,
-        factor: i16,
-    ) {
+    fn apply_all_processing(&mut self, ctx: &egui::Context) {
         let Some(original) = &self.original_image else {
             return;
         };
-        let adjusted = fun(original, factor);
+
+        let mut adjusted = self
+            .original_image
+            .clone()
+            .unwrap_or_else(|| original.clone());
+
+        adjusted = change_brightness(&adjusted, self.brightness);
+        adjusted = change_contrast(&adjusted, self.contrast);
+        adjusted = change_gamma(&adjusted, self.gamma);
+
         let (w, h) = adjusted.dimensions();
         let color_image = egui::ColorImage::from_rgb([w as usize, h as usize], adjusted.as_raw());
         self.texture =
@@ -86,10 +94,12 @@ impl App {
             .height(ui.available_height())
             .show(ui, |plot_ui| {
                 plot_ui.bar_chart(BarChart::new("red", make_bars(&red, egui::Color32::RED)));
-                plot_ui.bar_chart(BarChart::new("green", make_bars(&green, egui::Color32::GREEN)));
+                plot_ui.bar_chart(BarChart::new(
+                    "green",
+                    make_bars(&green, egui::Color32::GREEN),
+                ));
                 plot_ui.bar_chart(BarChart::new("blue", make_bars(&blue, egui::Color32::BLUE)));
             });
-            
     }
 }
 
@@ -110,8 +120,9 @@ impl eframe::App for App {
                         .integer(),
                 )
                 .changed();
+
             if brightness_changed {
-                self.apply_processing(ctx, change_brightness, self.brightness);
+                self.apply_all_processing(ctx);
             }
 
             ui.add_space(8.0);
@@ -125,7 +136,7 @@ impl eframe::App for App {
                 )
                 .changed();
             if contrast_changed {
-                self.apply_processing(ctx, change_contrast, self.contrast);
+                self.apply_all_processing(ctx);
             }
 
             ui.add_space(8.0);
@@ -139,7 +150,7 @@ impl eframe::App for App {
                 )
                 .changed();
             if gamma_changed {
-                self.apply_processing(ctx, change_gamma, self.gamma);
+                self.apply_all_processing(ctx);
             }
 
             ui.add_space(8.0);
