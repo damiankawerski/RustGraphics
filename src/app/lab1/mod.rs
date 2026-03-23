@@ -1,2 +1,2 @@
 pub mod image_manipulation;
-pub mod histogram;
+pub mod rgb;

@@ -1,8 +1,8 @@
+use super::histogram::calculate_histogram;
+use super::lab1::rgb::RGBControls;
+use super::lab2::hsl::hsl::HSLControls;
+use super::lab2::lab::lab::LABControls;
 use egui_plot::{Bar, BarChart, Plot};
-use rust_picture_processor::utils::histogram::calculate_histogram;
-use rust_picture_processor::utils::image_manipulation::{
-    change_brightness, change_contrast, change_gamma,
-};
 
 pub struct App {
     original_image: Option<image::RgbImage>,
@@ -11,9 +11,11 @@ pub struct App {
 
     texture: Option<egui::TextureHandle>,
 
-    brightness: i16,
-    contrast: i16,
-    gamma: i16,
+    rgb_controls: RGBControls,
+
+    hsl_controls: HSLControls,
+
+    lab_controls: LABControls,
 }
 
 impl Default for App {
@@ -22,10 +24,9 @@ impl Default for App {
             original_image: None,
             processed_image: None,
             texture: None,
-
-            brightness: 1,
-            contrast: 1,
-            gamma: 1,
+            rgb_controls: RGBControls::default(),
+            hsl_controls: HSLControls::default(),
+            lab_controls: LABControls::default(),
         }
     }
 }
@@ -51,30 +52,9 @@ impl App {
             Some(ctx.load_texture("processed", color_image, egui::TextureOptions::default()));
         self.original_image = Some(rgb.clone());
         self.processed_image = Some(rgb);
-        self.brightness = 1;
-        self.contrast = 1;
-        self.gamma = 1;
-    }
-
-    fn apply_all_processing(&mut self, ctx: &egui::Context) {
-        let Some(original) = &self.original_image else {
-            return;
-        };
-
-        let mut adjusted = self
-            .original_image
-            .clone()
-            .unwrap_or_else(|| original.clone());
-
-        adjusted = change_brightness(&adjusted, self.brightness);
-        adjusted = change_contrast(&adjusted, self.contrast);
-        adjusted = change_gamma(&adjusted, self.gamma);
-
-        let (w, h) = adjusted.dimensions();
-        let color_image = egui::ColorImage::from_rgb([w as usize, h as usize], adjusted.as_raw());
-        self.texture =
-            Some(ctx.load_texture("processed", color_image, egui::TextureOptions::default()));
-        self.processed_image = Some(adjusted);
+        self.rgb_controls.reset();
+        self.hsl_controls.reset();
+        self.lab_controls.reset();
     }
 
     fn paint_histogram(&self, ui: &mut egui::Ui) {
@@ -108,49 +88,44 @@ impl eframe::App for App {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.add_space(8.0);
 
-            if ui.button("Otwórz zdjęcie").clicked() {
-                self.load_image(ctx);
+            ui.horizontal(|ui| {
+                if ui.button("Otwórz plik").clicked() {
+                    self.load_image(ctx);
+                }
+
+                self.rgb_controls.draw_open_button(ui);
+                self.hsl_controls.draw_open_button(ui);
+                self.lab_controls.draw_open_button(ui);
+            });
+
+            if self.rgb_controls.show_modal(ctx) {
+                if let Some((processed_image, texture)) = self
+                    .rgb_controls
+                    .apply_all_processing(ctx, &self.original_image)
+                {
+                    self.processed_image = Some(processed_image);
+                    self.texture = Some(texture);
+                }
             }
 
-            ui.spacing_mut().slider_width = ui.available_width() - 120.0;
-            let brightness_changed = ui
-                .add(
-                    egui::Slider::new(&mut self.brightness, -255..=255)
-                        .text("Jasność")
-                        .integer(),
-                )
-                .changed();
-
-            if brightness_changed {
-                self.apply_all_processing(ctx);
+            if self.hsl_controls.show_modal(ctx) {
+                if let Some((processed_image, texture)) = self
+                    .hsl_controls
+                    .apply_all_processing(ctx, &self.original_image)
+                {
+                    self.processed_image = Some(processed_image);
+                    self.texture = Some(texture);
+                }
             }
 
-            ui.add_space(8.0);
-
-            ui.spacing_mut().slider_width = ui.available_width() - 120.0;
-            let contrast_changed = ui
-                .add(
-                    egui::Slider::new(&mut self.contrast, -255..=255)
-                        .text("Kontrast")
-                        .integer(),
-                )
-                .changed();
-            if contrast_changed {
-                self.apply_all_processing(ctx);
-            }
-
-            ui.add_space(8.0);
-
-            ui.spacing_mut().slider_width = ui.available_width() - 120.0;
-            let gamma_changed = ui
-                .add(
-                    egui::Slider::new(&mut self.gamma, -255..=255)
-                        .text("Gamma")
-                        .integer(),
-                )
-                .changed();
-            if gamma_changed {
-                self.apply_all_processing(ctx);
+            if self.lab_controls.show_modal(ctx) {
+                if let Some((processed_image, texture)) = self
+                    .lab_controls
+                    .apply_all_processing(ctx, &self.original_image)
+                {
+                    self.processed_image = Some(processed_image);
+                    self.texture = Some(texture);
+                }
             }
 
             ui.add_space(8.0);
