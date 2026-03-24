@@ -1,7 +1,3 @@
-fn norm_rgb(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
-    (r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
-}
-
 fn srgb_to_linear(c: f32) -> f32 {
     if c <= 0.04045 {
         c / 12.92
@@ -20,7 +16,7 @@ fn linear_to_srgb(c: f32) -> f32 {
 }
 
 pub fn rgb_to_xyz(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
-    let (rf, gf, bf) = norm_rgb(r, g, b);
+    let (rf, gf, bf) = (r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0);
     let rl = srgb_to_linear(rf);
     let gl = srgb_to_linear(gf);
     let bl = srgb_to_linear(bf);
@@ -56,7 +52,11 @@ pub fn xyz_to_lab(x: f32, y: f32, z: f32) -> (f32, f32, f32) {
     let fy_v = fx(yr);
     let fz_v = fx(zr);
 
-    (116.0 * fy_v - 16.0, 500.0 * (fx_v - fy_v), 200.0 * (fy_v - fz_v))
+    (
+        116.0 * fy_v - 16.0,
+        500.0 * (fx_v - fy_v),
+        200.0 * (fy_v - fz_v),
+    )
 }
 
 pub fn lab_to_xyz(l: f32, a: f32, b: f32) -> (f32, f32, f32) {
@@ -94,7 +94,6 @@ pub fn lab_to_xyz(l: f32, a: f32, b: f32) -> (f32, f32, f32) {
 
     (xr * x_r, yr * y_r, zr * z_r)
 }
-
 
 fn fx(x: f32) -> f32 {
     if x > 0.008856 {

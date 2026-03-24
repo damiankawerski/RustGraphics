@@ -1,7 +1,7 @@
 use crate::app::lab2::lab::image_manipulation::modify_lab;
 
 pub struct LABControls {
-    pub L: i16,
+    pub l: i16,
     pub a: i16,
     pub b: i16,
     is_modal_open: bool,
@@ -10,7 +10,7 @@ pub struct LABControls {
 impl Default for LABControls {
     fn default() -> Self {
         Self {
-            L: 0,
+            l: 0,
             a: 0,
             b: 0,
             is_modal_open: false,
@@ -20,7 +20,7 @@ impl Default for LABControls {
 
 impl LABControls {
     pub fn reset(&mut self) {
-        self.L = 0;
+        self.l = 0;
         self.a = 0;
         self.b = 0;
     }
@@ -62,8 +62,8 @@ impl LABControls {
 
         let mut adjusted = original.clone();
 
-        if self.L != 0 || self.a != 0 || self.b != 0 {
-            modify_lab(&mut adjusted, self.L, self.a, self.b);
+        if self.l != 0 || self.a != 0 || self.b != 0 {
+            modify_lab(&mut adjusted, self.l, self.a, self.b);
         }
 
         let (w, h) = adjusted.dimensions();
@@ -80,7 +80,7 @@ impl LABControls {
         ui.spacing_mut().slider_width = ui.available_width() - 120.0;
         changed |= ui
             .add(
-                egui::Slider::new(&mut self.L, -255..=255)
+                egui::Slider::new(&mut self.l, -255..=255)
                     .text("L")
                     .integer(),
             )

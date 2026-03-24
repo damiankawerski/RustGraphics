@@ -2,6 +2,7 @@ use super::histogram::calculate_histogram;
 use super::lab1::rgb::RGBControls;
 use super::lab2::hsl::hsl::HSLControls;
 use super::lab2::lab::lab::LABControls;
+use super::lab3::filters::Filters;
 use egui_plot::{Bar, BarChart, Plot};
 
 pub struct App {
@@ -16,6 +17,8 @@ pub struct App {
     hsl_controls: HSLControls,
 
     lab_controls: LABControls,
+
+    filters: Filters,
 }
 
 impl Default for App {
@@ -27,6 +30,7 @@ impl Default for App {
             rgb_controls: RGBControls::default(),
             hsl_controls: HSLControls::default(),
             lab_controls: LABControls::default(),
+            filters: Filters::default(),
         }
     }
 }
@@ -55,6 +59,7 @@ impl App {
         self.rgb_controls.reset();
         self.hsl_controls.reset();
         self.lab_controls.reset();
+        self.filters.reset(ctx, &self.original_image, &mut self.processed_image, &mut self.texture);
     }
 
     fn paint_histogram(&self, ui: &mut egui::Ui) {
@@ -96,6 +101,7 @@ impl eframe::App for App {
                 self.rgb_controls.draw_open_button(ui);
                 self.hsl_controls.draw_open_button(ui);
                 self.lab_controls.draw_open_button(ui);
+                self.filters.draw_open_button(ui);
             });
 
             if self.rgb_controls.show_modal(ctx) {
@@ -127,6 +133,8 @@ impl eframe::App for App {
                     self.texture = Some(texture);
                 }
             }
+
+            self.filters.show_modal(ctx, &self.original_image, &mut self.processed_image, &mut self.texture);
 
             ui.add_space(8.0);
 
