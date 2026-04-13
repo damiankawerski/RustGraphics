@@ -128,7 +128,7 @@ pub fn rotate(src: &RgbImage, angle_deg: f32) -> RgbImage {
     let cx_dst = dst_w as f32 / 2.0;
     let cy_dst = dst_h as f32 / 2.0;
 
-    // macierz odwrotna rotacji (obrot o -a) + przesunięcie do środka
+    // macierz odwrotna rotacji 
     let tx = cx_src - cos_angle * cx_dst - sin_angle * cy_dst;
     let ty = cy_src + sin_angle * cx_dst - cos_angle * cy_dst;
 
