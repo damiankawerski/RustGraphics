@@ -1,4 +1,5 @@
 use super::histogram::calculate_histogram;
+use super::app2::App2;
 use super::lab1::rgb::RGBControls;
 use super::lab2::hsl::hsl::HSLControls;
 use super::lab2::lab::lab::LABControls;
@@ -6,7 +7,17 @@ use super::lab3::filters::Filters;
 use super::lab4::transformations::Transformations;
 use egui_plot::{Bar, BarChart, Plot};
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ActiveTab {
+    App,
+    App2,
+}
+
 pub struct App {
+    active_tab: ActiveTab,
+
+    app2: App2,
+
     original_image: Option<image::RgbImage>,
 
     processed_image: Option<image::RgbImage>,
@@ -27,6 +38,8 @@ pub struct App {
 impl Default for App {
     fn default() -> Self {
         Self {
+            active_tab: ActiveTab::App,
+            app2: App2::default(),
             original_image: None,
             processed_image: None,
             texture: None,
@@ -97,6 +110,18 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.add_space(8.0);
+
+            ui.horizontal(|ui| {
+                ui.selectable_value(&mut self.active_tab, ActiveTab::App, "App");
+                ui.selectable_value(&mut self.active_tab, ActiveTab::App2, "App2");
+            });
+
+            ui.separator();
+
+            if self.active_tab == ActiveTab::App2 {
+                self.app2.update(ui);
+                return;
+            }
 
             ui.horizontal(|ui| {
                 if ui.button("Otwórz plik").clicked() {

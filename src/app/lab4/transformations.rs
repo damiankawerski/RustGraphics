@@ -82,10 +82,18 @@ impl Transformations {
                     );
                 });
 
-                ui.add(
+                let rotation_response = ui.add(
                     egui::Slider::new(&mut self.rotation_angle, -360..=360)
                         .text("Kąt obrotu"),
                 );
+
+                if rotation_response.changed() {
+                    if let Some((img, tex)) = self.apply_all_processing(ctx, original_image) {
+                        *processed_image = Some(img);
+                        *texture = Some(tex);
+                    }
+                    changed = true;
+                }
 
                 ui.add_space(8.0);
 
